@@ -21,15 +21,28 @@ local activePushes = {} -- [player] = { humanoid, originalSpeed, hitboxes }
 local function restoreSpeed(player)
 	local state = activePushes[player]
 	if not state then
+		player:SetAttribute("EmpujandoBloquePesado", false)
 		return
 	end
 	if state.humanoid and state.humanoid.Parent then
 		state.humanoid.WalkSpeed = state.originalSpeed
 	end
 	activePushes[player] = nil
+	player:SetAttribute("EmpujandoBloquePesado", false)
 end
 
-event.Event:Connect(function(player, hitbox, isPushing)
+local function actualizarEstadoEmpujePesado(player, state)
+	local empujandoPesado = false
+	for _, esPesado in state.hitboxes do
+		if esPesado then
+			empujandoPesado = true
+			break
+		end
+	end
+	player:SetAttribute("EmpujandoBloquePesado", empujandoPesado)
+end
+
+event.Event:Connect(function(player, hitbox, isPushing, isHeavy)
 	if not player or not player:IsA("Player") then
 		return
 	end
@@ -55,19 +68,23 @@ event.Event:Connect(function(player, hitbox, isPushing)
 			activePushes[player] = state
 		end
 
-		state.hitboxes[hitbox] = true
+		state.hitboxes[hitbox] = isHeavy == true
 		humanoid.WalkSpeed = state.originalSpeed * 0.5
+		actualizarEstadoEmpujePesado(player, state)
 	else
 		if state then
 			state.hitboxes[hitbox] = nil
 			if not next(state.hitboxes) then
 				restoreSpeed(player)
+			else
+				actualizarEstadoEmpujePesado(player, state)
 			end
 		end
 	end
 end)
 
 local function bindPlayer(player)
+	player:SetAttribute("EmpujandoBloquePesado", false)
 	player.CharacterRemoving:Connect(function()
 		restoreSpeed(player)
 	end)

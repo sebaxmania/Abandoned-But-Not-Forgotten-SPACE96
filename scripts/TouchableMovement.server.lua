@@ -39,6 +39,12 @@ local function isTouchable()
 		or (container:IsA("Model") and CollectionService:HasTag(container, TAG_NAME))
 end
 
+local function isHeavyBlock()
+	return CollectionService:HasTag(hitbox, "ObjetoPesado")
+		or CollectionService:HasTag(blockPart, "ObjetoPesado")
+		or (container:IsA("Model") and CollectionService:HasTag(container, "ObjetoPesado"))
+end
+
 local function getPlayerFromPart(part)
 	local current = part
 	while current and current ~= workspace do
@@ -69,7 +75,7 @@ overlapParams.MaxParts = 64
 RunService.Heartbeat:Connect(function()
 	if not isTouchable() then
 		for player in activePlayers do
-			pushStateChanged:Fire(player, hitbox, false)
+			pushStateChanged:Fire(player, hitbox, false, false)
 		end
 		table.clear(activePlayers)
 		table.clear(movementStates)
@@ -98,7 +104,7 @@ RunService.Heartbeat:Connect(function()
 	-- El estado de empuje/velocidad/red dura exactamente mientras haya contacto.
 	for player in activePlayers do
 		if not contacts[player] then
-			pushStateChanged:Fire(player, hitbox, false)
+			pushStateChanged:Fire(player, hitbox, false, false)
 			activePlayers[player] = nil
 			movementStates[player] = nil
 		end
@@ -108,7 +114,7 @@ RunService.Heartbeat:Connect(function()
 	for player, contact in contacts do
 		if not activePlayers[player] then
 			activePlayers[player] = true
-			pushStateChanged:Fire(player, hitbox, true)
+			pushStateChanged:Fire(player, hitbox, true, isHeavyBlock())
 		end
 
 		local root = contact.root
@@ -152,7 +158,7 @@ end)
 
 Players.PlayerRemoving:Connect(function(player)
 	if activePlayers[player] then
-		pushStateChanged:Fire(player, hitbox, false)
+		pushStateChanged:Fire(player, hitbox, false, false)
 	end
 	activePlayers[player] = nil
 	movementStates[player] = nil

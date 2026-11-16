@@ -59,6 +59,13 @@ UserInputService.MouseBehavior = Enum.MouseBehavior.LockCenter
 UserInputService.MouseIconEnabled = false
 
 UserInputService.InputChanged:Connect(function(input)
+	-- Allow mouse clicks in the tutorial UI without rotating the camera.
+	local playerGui = player:FindFirstChildOfClass("PlayerGui")
+	local tutorialGui = playerGui and playerGui:FindFirstChild("TutorialGui")
+	if tutorialGui and tutorialGui.Enabled then
+		return
+	end
+
 	if input.UserInputType ~= Enum.UserInputType.MouseMovement then
 		return
 	end
